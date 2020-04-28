@@ -22,17 +22,17 @@
     "laravel": {
       "providers": [
         "EvolutionCMS\\Ddafilters\\DdafiltersServiceProvider"
+      ],
+      "files": [
+        {
+          "source": "assets/",
+          "destination": "modules/"
+        },
+        {
+          "source": "assets/tvs",
+          "destination": "tvs/"
+        }
       ]
-    },
-    "files": [
-      {
-        "source": "assets/",
-        "destination": "modules/"
-      },
-      {
-        "source": "assets/tvs",
-        "destination": "tvs/"
-      }
-    ]
+    }
   }
 }
