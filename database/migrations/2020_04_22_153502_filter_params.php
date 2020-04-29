@@ -15,7 +15,7 @@ class FilterParams extends Migration
     {
         Schema::create('filter_params', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('tv_id');
+            $table->bigInteger('tv_id')->nullable();
             $table->string('prefix');
             $table->string('alias');
             $table->string('desc');

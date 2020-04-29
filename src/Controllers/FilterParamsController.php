@@ -39,7 +39,7 @@ class FilterParamsController
 
             $request['id'] = $id;
             self::updateSelector($request);
-            HelperController::response(['id' => $id]);
+            HelperController::response(['newid' => $id]);
         } else {
             HelperController::answerParams($valid);
         }
@@ -126,7 +126,7 @@ class FilterParamsController
         $filterParam->save();
         $selectorTemplate = EVO_CORE_PATH . 'custom/packages/ddafilters/modules/template/selectorTemplate.php';
         if (!file_exists($selectorTemplate)) {
-            $selectorTemplate = EVO_CORE_PATH . 'vendor/ser1ous/evocms-ddafilters/modules/template/selectorTemplate.php';
+            $selectorTemplate = EVO_CORE_PATH . 'vendor/ser1ous/ddafilters/modules/template/selectorTemplate.php';
         }
         $selectorTemplate = file_get_contents($selectorTemplate);
         $alias_small = strtolower($request['alias']);
