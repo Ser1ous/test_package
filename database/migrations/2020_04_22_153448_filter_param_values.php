@@ -15,13 +15,13 @@ class FilterParamValues extends Migration
     {
         Schema::create('filter_param_values', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('tv_id');
+            $table->bigInteger('tv_id')->nullable();
             $table->bigInteger('param_id');
-            $table->string('alias');
-            $table->string('value');
-            $table->string('value_ua');
-            $table->string('value_ru');
-            $table->string('value_en');
+            $table->string('alias')->nullable();
+            $table->string('value')->nullable();
+            $table->string('value_ua')->nullable();
+            $table->string('value_ru')->nullable();
+            $table->string('value_en')->nullable();
             $table->timestamps();
             $table->index(['alias']);
         });
