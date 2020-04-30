@@ -26,11 +26,7 @@
       "files": [
         {
           "source": "assets/",
-          "destination": "modules/"
-        },
-        {
-          "source": "tvs/",
-          "destination": "tvs/"
+          "destination": ""
         }
       ]
     }
