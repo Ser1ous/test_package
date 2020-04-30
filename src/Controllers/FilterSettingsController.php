@@ -56,6 +56,10 @@ class FilterSettingsController
                     if (!file_exists($productTemplate)) {
                         $productTemplate = EVO_CORE_PATH . 'vendor/ser1ous/ddafilters/modules/template/productTemplate.php';
                     }
+                    $default_config = MODX_BASE_PATH . '/assets/plugins/templatesedit/configs/template__' . $product . '__1.json';
+                    if (file_exists($default_config)) {
+                        unlink($default_config);
+                    }
                     file_put_contents(MODX_BASE_PATH . '/assets/plugins/templatesedit/configs/template__' . $product . '.php', file_get_contents($productTemplate));
                     foreach ($tvs as $tv)
                         SiteTmplvarTemplate::firstOrCreate(['tmplvarid' => $tv, 'templateid' => $product, 'rank' => 0]);

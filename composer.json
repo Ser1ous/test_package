@@ -29,7 +29,7 @@
           "destination": "modules/"
         },
         {
-          "source": "assets/tvs",
+          "source": "tvs/",
           "destination": "tvs/"
         }
       ]

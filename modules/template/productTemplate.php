@@ -12,32 +12,35 @@ use Illuminate\Support\Facades\DB;
 $evo = EvolutionCMS();
 $parents = $evo->getParentIds($_GET['id']);
 $parents = array_values($parents);
-
-$categoryTv = SiteTmplvar::where('name', 'category')->first();
-$parentString = implode(',', $parents);
-$result = \EvolutionCMS\Models\SiteTmplvarContentvalue::where('tmplvarid',$categoryTv->getKey())
-    ->whereIn('contentid', $parents)
-    ->orderBy(DB::raw('FIELD(contentid,' . $parentString . ')'))->first();
 $paramsTemplateEditor = [];
-$globalParams = $evo->getConfig('dda_filter_global_product_params');
-if(is_array($globalParams)){
-    foreach ($globalParams as $key=>$globalParam){
-        $paramsTemplateEditor[$key] = $globalParam;
+if (count($parents) > 0) {
+    $categoryTv = SiteTmplvar::where('name', 'category')->first();
+    $parentString = implode(',', $parents);
+    $result = \EvolutionCMS\Models\SiteTmplvarContentvalue::where('tmplvarid', $categoryTv->getKey())
+        ->whereIn('contentid', $parents)
+        ->orderBy(DB::raw('FIELD(contentid,' . $parentString . ')'))->first();
+
+    $globalParams = $evo->getConfig('dda_filter_global_product_params');
+    if (is_array($globalParams)) {
+        foreach ($globalParams as $key => $globalParam) {
+            $paramsTemplateEditor[$key] = $globalParam;
+        }
     }
-}
-if(is_null($result)){
-    $default = true;
+    if (is_null($result)) {
+        $default = true;
+    } else {
+        $default = false;
+        $params = \EvolutionCMS\Ddafilters\Models\FilterParamsCategory::where('category_id', $result->value)->orderBy('order')->pluck('param_id');
+
+        $paramsOutput = \EvolutionCMS\Ddafilters\Models\FilterParams::whereIn('id', $params)->get();
+        foreach ($paramsOutput as $item) {
+            $paramsTemplateEditor[$item->alias] = [];
+
+        }
+    }
 }else {
     $default = false;
-    $params = \EvolutionCMS\Ddafilters\Models\FilterParamsCategory::where('category_id', $result->value)->orderBy('order')->pluck('param_id');
-
-    $paramsOutput = \EvolutionCMS\Ddafilters\Models\FilterParams::whereIn('id',$params)->get();
-    foreach ($paramsOutput as $item){
-        $paramsTemplateEditor[$item->alias] = [];
-
-    }
 }
-
 $tabs = [
     'General' => [
         'default' => $default,
@@ -117,15 +120,15 @@ $tabs = [
 ];
 $customTabs = [];
 $customTabs = $evo->getConfig('dda_filter_custom_tabs');
-if(is_array($customTabs) )
+if (is_array($customTabs))
     $tabs = array_merge($tabs, $customTabs);
 
 $customTabs = $evo->getConfig('dda_filter_tabs_sort');
-if(is_array($customTabs)){
+if (is_array($customTabs)) {
     $new_tabs = [];
-    foreach ($customTabs as $key=>$customTab){
-        if(isset($tabs[$key])){
-            if($customTab != ''){
+    foreach ($customTabs as $key => $customTab) {
+        if (isset($tabs[$key])) {
+            if ($customTab != '') {
                 $tabs[$key]['title'] = $customTab;
             }
             $new_tabs[$key] = $tabs[$key];
