@@ -8,12 +8,14 @@ use EvolutionCMS\Ddafilters\Models\FilterParams;
 use EvolutionCMS\Ddafilters\Models\FilterParamsCategory;
 use EvolutionCMS\Ddafilters\Models\FilterParamValues;
 use EvolutionCMS\Models\SiteTmplvar;
+use EvolutionCMS\Models\SiteTmplvarTemplate;
+use EvolutionCMS\Models\SystemSetting;
 
 class FilterParamsController
 {
     public static function crudParams($request)
     {
-        if(!isset($request['webix_operation'])) $request['webix_operation'] = 'default';
+        if (!isset($request['webix_operation'])) $request['webix_operation'] = 'default';
         switch ($request['webix_operation']) {
             case 'insert':
                 HelperController::response(self::createParam($_POST));
@@ -39,7 +41,7 @@ class FilterParamsController
 
             $request['id'] = $id;
             self::updateSelector($request);
-            HelperController::response(['newid' => $id]);
+            HelperController::response(['id' => $id]);
         } else {
             HelperController::answerParams($valid);
         }
@@ -62,12 +64,15 @@ class FilterParamsController
 
     public static function deleteParam($request)
     {
-        $check = FilterParamsCategory::where('param_id',$request['id'])->first();
-        if(!is_null($check)){
+        $check = FilterParamsCategory::where('param_id', $request['id'])->first();
+        if (!is_null($check)) {
             return 'Удалите параметр из привязки к категории';
-        }else {
+        } else {
             FilterParamValues::where('param_id', $request['id'])->delete();
-            FilterParams::find($request['id'])->delete();
+            $filterParam = FilterParams::find($request['id']);
+            SiteTmplvarTemplate::where('tmplvarid', $filterParam->tv_id)->delete();
+            SiteTmplvar::find($filterParam->tv_id)->delete();
+            $filterParam->delete();
             return true;
         }
 
@@ -89,7 +94,7 @@ class FilterParamsController
                 return 'Это имя уже занято';
             }
             if (!is_null(FilterParams::where('alias', $request['alias'])->where('id', '!=', $request['id'])->first())) {
-                return 'Это имя уже занято';
+                return 'Это имя/alias уже занято';
             }
             if (!is_null(FilterParams::where('prefix', $request['prefix'])->where('id', '!=', $request['id'])->first())) {
                 return 'Этот prefix уже использует другой параметр';
@@ -102,13 +107,14 @@ class FilterParamsController
                 return 'Этот prefix уже использует другой параметр';
             }
             if (!is_null(FilterParams::where('alias', $request['alias'])->first())) {
-                return 'Этот prefix уже использует другой параметр';
+                return 'Это имя/alias уже занято';
             }
         }
         return true;
     }
 
-    static function updateSelector($request){
+    static function updateSelector($request)
+    {
         $filterParam = FilterParams::find($request['id']);
         $oldName = $filterParam->alias;
 
@@ -119,21 +125,45 @@ class FilterParamsController
         }
         if ($filterParam->tv_id > 0) {
             $tv = SiteTmplvar::find($filterParam->tv_id);
+            if ($request['typeinput'] == 'select') {
+                $tv->type = 'custom_tv:selector';
+            }else {
+                $tv->type = 'text';
+            }
+            $tv->save();
         } else {
-            $tv = SiteTmplvar::create(['type' => 'custom_tv:selector', 'name' => $filterParam->alias, 'caption' => $filterParam->desc]);
+            if ($request['typeinput'] == 'select') {
+                $tv = SiteTmplvar::create(['type' => 'custom_tv:selector', 'name' => $filterParam->alias, 'caption' => $filterParam->desc]);
+            } else {
+                $tv = SiteTmplvar::create(['type' => 'text', 'name' => $filterParam->alias, 'caption' => $filterParam->desc]);
+            }
         }
         $filterParam->tv_id = $tv->id;
         $filterParam->save();
-        $selectorTemplate = EVO_CORE_PATH . 'custom/packages/ddafilters/modules/template/selectorTemplate.php';
-        if (!file_exists($selectorTemplate)) {
-            $selectorTemplate = EVO_CORE_PATH . 'vendor/ser1ous/ddafilters/modules/template/selectorTemplate.php';
+
+        if ($request['typeinput'] == 'select') {
+            $selectorTemplate = EVO_CORE_PATH . 'custom/packages/ddafilters/modules/template/selectorTemplate.php';
+            if (!file_exists($selectorTemplate)) {
+                $selectorTemplate = EVO_CORE_PATH . 'vendor/ser1ous/ddafilters/modules/template/selectorTemplate.php';
+            }
+            $selectorTemplate = file_get_contents($selectorTemplate);
+            $alias_small = strtolower($request['alias']);
+            $alias_small_up_first = ucfirst($alias_small);
+            $selectorTemplate = str_replace('__ALIAS_BIG_FIRST__', $alias_small_up_first, $selectorTemplate);
+            $selectorTemplate = str_replace('__TV__ID__', $filterParam->getKey(), $selectorTemplate);
+            file_put_contents(MODX_BASE_PATH . 'assets/tvs/selector/lib/' . $alias_small . '.controller.class.php', $selectorTemplate);
         }
-        $selectorTemplate = file_get_contents($selectorTemplate);
-        $alias_small = strtolower($request['alias']);
-        $alias_small_up_first = ucfirst($alias_small);
-        $selectorTemplate = str_replace('__ALIAS_BIG_FIRST__', $alias_small_up_first, $selectorTemplate);
-        $selectorTemplate = str_replace('__TV__ID__', $filterParam->tv_id, $selectorTemplate);
-        file_put_contents(MODX_BASE_PATH . 'assets/tvs/selector/lib/' . $alias_small . '.controller.class.php', $selectorTemplate);
+        $products = SystemSetting::find('template_products')->setting_value;
+        if (!is_null($products)) {
+            $products = explode(',', $products);
+            $products = array_map('trim', $products);
+            SiteTmplvarTemplate::where('tmplvarid', $filterParam->tv_id)->delete();
+            foreach ($products as $product) {
+                SiteTmplvarTemplate::firstOrCreate(['tmplvarid' => $filterParam->tv_id, 'templateid' => $product, 'rank' => 0]);
+            }
+
+        }
+
     }
 }
 
