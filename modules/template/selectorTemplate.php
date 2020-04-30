@@ -3,7 +3,6 @@
 namespace DdaParams;
 use EvolutionCMS\Ddafilters\Models\FilterParamValues;
 
-include_once(MODX_BASE_PATH . 'assets/tvs/selector/lib/controller.class.php');
 
 class __ALIAS_BIG_FIRST__Controller
 {
