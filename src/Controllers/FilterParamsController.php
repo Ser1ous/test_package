@@ -119,21 +119,21 @@ class FilterParamsController
         $oldName = $filterParam->alias;
 
         if ($oldName != $request['alias']) {
-            if (file_exists(MODX_BASE_PATH . 'assets/tvs/selector/lib/' . $oldName . '.controller.class.php')) {
-                unlink(MODX_BASE_PATH . 'assets/tvs/selector/lib/' . $oldName . '.controller.class.php');
+            if (file_exists(MODX_BASE_PATH . 'assets/tvs/ddaparams/lib/' . $oldName . '.controller.class.php')) {
+                unlink(MODX_BASE_PATH . 'assets/tvs/ddaparams/lib/' . $oldName . '.controller.class.php');
             }
         }
         if ($filterParam->tv_id > 0) {
             $tv = SiteTmplvar::find($filterParam->tv_id);
             if ($request['typeinput'] == 'select') {
-                $tv->type = 'custom_tv:selector';
+                $tv->type = 'custom_tv:ddaparams';
             }else {
                 $tv->type = 'text';
             }
             $tv->save();
         } else {
             if ($request['typeinput'] == 'select') {
-                $tv = SiteTmplvar::create(['type' => 'custom_tv:selector', 'name' => $filterParam->alias, 'caption' => $filterParam->desc]);
+                $tv = SiteTmplvar::create(['type' => 'custom_tv:ddaparams', 'name' => $filterParam->alias, 'caption' => $filterParam->desc]);
             } else {
                 $tv = SiteTmplvar::create(['type' => 'text', 'name' => $filterParam->alias, 'caption' => $filterParam->desc]);
             }
@@ -151,7 +151,7 @@ class FilterParamsController
             $alias_small_up_first = ucfirst($alias_small);
             $selectorTemplate = str_replace('__ALIAS_BIG_FIRST__', $alias_small_up_first, $selectorTemplate);
             $selectorTemplate = str_replace('__TV__ID__', $filterParam->getKey(), $selectorTemplate);
-            file_put_contents(MODX_BASE_PATH . 'assets/tvs/selector/lib/' . $alias_small . '.controller.class.php', $selectorTemplate);
+            file_put_contents(MODX_BASE_PATH . 'assets/tvs/ddaparams/lib/' . $alias_small . '.controller.class.php', $selectorTemplate);
         }
         $products = SystemSetting::find('template_products')->setting_value;
         if (!is_null($products)) {
